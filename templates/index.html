@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}YouTube Plus Plus - ホーム{% endblock %}
+
+{% block content %}
+<div class="index-container">
+
+  {% if not results %}
+  <!-- トップページ -->
+  <div class="hero">
+    <h1>▶ YouTube Plus Plus</h1>
+    <p>広告なし・プライバシー重視のYouTubeクライアント</p>
+  </div>
+  {% endif %}
+
+  {% if results %}
+  <!-- 検索結果 -->
+  <h2 class="section-title">「{{ query }}」の検索結果</h2>
+  <div class="video-grid">
+    {% for video in results %}
+    <a href="/watch?v={{ video.id }}&backend={{ backend }}" class="video-card">
+      <div class="thumbnail-wrap">
+        <img src="{{ video.thumbnail }}" alt="{{ video.title }}" loading="lazy">
+        {% if video.duration %}
+        <span class="duration">{{ video.duration | duration }}</span>
+        {% endif %}
+        {% if video.is_short %}
+        <span class="badge short">Short</span>
+        {% endif %}
+      </div>
+      <div class="video-info">
+        <p class="video-title">{{ video.title }}</p>
+        <p class="video-channel">{{ video.channel }}</p>
+        {% if video.view_count %}
+        <p class="video-views">{{ video.view_count | views }}回視聴</p>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
