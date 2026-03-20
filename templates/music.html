@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}{{ video.title }} - Music{% endblock %}
+
+{% block content %}
+<div class="music-player">
+
+  <!-- サムネ（回転） -->
+  <img
+    src="{{ video.thumbnail }}"
+    alt="{{ video.title }}"
+    class="music-thumbnail"
+    id="musicThumb"
+  >
+
+  <!-- 曲情報 -->
+  <p class="music-title">{{ video.title }}</p>
+  <p class="music-artist">{{ video.artist or video.channel }}</p>
+  {% if video.album %}
+  <p style="color:#777; font-size:0.8rem; margin-bottom:16px;">{{ video.album }}</p>
+  {% endif %}
+
+  <!-- プログレスバー -->
+  <input type="range" class="music-progress" id="progress" value="0" min="0" step="0.1">
+  <div class="music-time">
+    <span id="currentTime">0:00</span>
+    <span id="duration">0:00</span>
+  </div>
+
+  <!-- コントロール -->
+  <div class="music-controls">
+    <button class="music-btn" onclick="seek(-10)">⏪</button>
+    <button class="music-btn" id="playBtn" onclick="togglePlay()">▶️</button>
+    <button class="music-btn" onclick="seek(10)">⏩</button>
+  </div>
+
+  <!-- 音量 -->
+  <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
+    <span style="color:#aaa; font-size:0.85rem;">🔊</span>
+    <input type="range" id="volume" min="0" max="1" step="0.01" value="1"
+      style="accent-color:#ff0000; width:100px;"
+      oninput="setVolume(this.value)"
+    >
+  </div>
+
+  <audio id="audioPlayer"></audio>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const videoId = "{{ video.id }}";
+  const audio   = document.getElementById("audioPlayer");
+  const thumb   = document.getElementById("musicThumb");
+  const playBtn = document.getElementById("playBtn");
+  const progress = document.getElementById("progress");
+  const currentTimeEl = document.getElementById("currentTime");
+  const durationEl    = document.getElementById("duration");
+
+  // ──────────────────────────────
+  // 初期化
+  // ──────────────────────────────
+  async function init() {
+    try {
+      const res  = await fetch(`https://plus-api-teal.vercel.app/music/${videoId}`);
+      const data = await res.json();
+      const formats = data.audio_formats || [];
+
+      if (formats.length > 0) {
+        // 一番高ビットレートを選択
+        const best = formats.reduce((a, b) => (a.abr || 0) > (b.abr || 0) ? a : b);
+        audio.src = best.url;
+        audio.play();
+        thumb.classList.add("playing");
+        playBtn.textContent = "⏸️";
+      }
+    } catch (e) {
+      console.error("Music読み込みエラー:", e);
+    }
+  }
+
+  // ──────────────────────────────
+  // 再生・停止
+  // ──────────────────────────────
+  function togglePlay() {
+    if (audio.paused) {
+      audio.play();
+      thumb.classList.add("playing");
+      playBtn.textContent = "⏸️";
+    } else {
+      audio.pause();
+      thumb.classList.remove("playing");
+      playBtn.textContent = "▶️";
+    }
+  }
+
+  // ──────────────────────────────
+  // シーク
+  // ──────────────────────────────
+  function seek(sec) {
+    audio.currentTime = Math.max(0, audio.currentTime + sec);
+  }
+
+  // ──────────────────────────────
+  // 音量
+  // ──────────────────────────────
+  function setVolume(val) {
+    audio.volume = val;
+  }
+
+  // ──────────────────────────────
+  // プログレスバー更新
+  // ──────────────────────────────
+  audio.addEventListener("timeupdate", () => {
+    if (!audio.duration) return;
+    progress.max   = audio.duration;
+    progress.value = audio.currentTime;
+    currentTimeEl.textContent = formatTime(audio.currentTime);
+    durationEl.textContent    = formatTime(audio.duration);
+  });
+
+  progress.addEventListener("input", () => {
+    audio.currentTime = progress.value;
+  });
+
+  audio.addEventListener("ended", () => {
+    thumb.classList.remove("playing");
+    playBtn.textContent = "▶️";
+  });
+
+  // ──────────────────────────────
+  // 時間フォーマット
+  // ──────────────────────────────
+  function formatTime(sec) {
+    sec = Math.floor(sec);
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  }
+
+  init();
+</script>
+{% endblock %}
