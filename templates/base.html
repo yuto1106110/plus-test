@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}YouTube Plus Plus{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <!-- dash.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.0/dash.all.min.js"></script>
+  <!-- hls.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.10/hls.min.js"></script>
+</head>
+<body>
+  <!-- ヘッダー -->
+  <header class="header">
+    <a href="/index" class="logo">▶ YouTube++</a>
+    <form action="/index" method="get" class="search-form">
+      <input
+        type="text"
+        name="q"
+        placeholder="検索..."
+        value="{{ query | default('') }}"
+        class="search-input"
+      >
+      <input type="hidden" name="backend" value="{{ backend | default('plusapi') }}">
+      <button type="submit" class="search-btn">🔍</button>
+    </form>
+    <!-- バックエンド切り替え -->
+    <select class="backend-select" onchange="switchBackend(this.value)">
+      <option value="plusapi"   {% if backend == 'plusapi'   %}selected{% endif %}>Plus API</option>
+      <option value="invidious" {% if backend == 'invidious' %}selected{% endif %}>Invidious</option>
+      <option value="ytdlp"     {% if backend == 'ytdlp'     %}selected{% endif %}>yt-dlp</option>
+      <option value="embed"     {% if backend == 'embed'     %}selected{% endif %}>埋め込み</option>
+      <option value="nocookie"  {% if backend == 'nocookie'  %}selected{% endif %}>Nocookie</option>
+    </select>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script>
+    function switchBackend(value) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('backend', value);
+      window.location.href = url.toString();
+    }
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
