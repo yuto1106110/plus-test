@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ channel.title }} - YouTube Plus Plus{% endblock %}
+
+{% block content %}
+<div class="channel-container">
+
+  <!-- チャンネルヘッダー -->
+  <div class="channel-header">
+    {% if channel.thumbnail %}
+    <img src="{{ channel.thumbnail }}" alt="{{ channel.title }}" class="channel-avatar">
+    {% else %}
+    <div class="channel-avatar-placeholder">📺</div>
+    {% endif %}
+    <div>
+      <h1 class="channel-name">{{ channel.title }}</h1>
+      <p class="channel-subs">登録者 {{ channel.subscriber_count | views }}人</p>
+      {% if channel.description %}
+      <p class="channel-desc">{{ channel.description[:100] }}...</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 並び替え -->
+  <div class="sort-wrap">
+    <label style="color:#aaa; font-size:0.85rem;">並び替え：</label>
+    <select class="quality-select" onchange="changeSort(this.value)">
+      <option value="date"      {% if sort == 'date'      %}selected{% endif %}>新しい順</option>
+      <option value="viewCount" {% if sort == 'viewCount' %}selected{% endif %}>人気順</option>
+    </select>
+  </div>
+
+  <!-- 動画一覧 -->
+  <div class="video-grid" style="margin-top:16px;">
+    {% for video in videos %}
+    <a href="/watch?v={{ video.id }}&backend={{ backend }}" class="video-card">
+      <div class="thumbnail-wrap">
+        <img src="{{ video.thumbnail }}" alt="{{ video.title }}" loading="lazy">
+        {% if video.duration %}
+        <span class="duration">{{ video.duration | duration }}</span>
+        {% endif %}
+        {% if video.is_short %}
+        <span class="badge short">Short</span>
+        {% endif %}
+      </div>
+      <div class="video-info">
+        <p class="video-title">{{ video.title }}</p>
+        {% if video.view_count %}
+        <p class="video-views">{{ video.view_count | views }}回視聴</p>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function changeSort(value) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('sort', value);
+    window.location.href = url.toString();
+  }
+</script>
+{% endblock %}
