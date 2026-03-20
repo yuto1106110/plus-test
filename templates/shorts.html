@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ video.title }} - Shorts{% endblock %}
+
+{% block content %}
+<div class="shorts-container">
+
+  <div class="shorts-player">
+    <video id="shortsPlayer" controls autoplay playsinline loop></video>
+  </div>
+
+  <div class="shorts-meta">
+    <p class="shorts-title">{{ video.title }}</p>
+    <a href="/channel/{{ video.channel_id }}?backend={{ backend }}" class="channel-link">
+      📺 {{ video.channel }}
+    </a>
+    <div class="shorts-stats">
+      <span>👁 {{ video.view_count | views }}</span>
+      <span>👍 {{ video.like_count | views }}</span>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const videoId = "{{ video.id }}";
+  const player  = document.getElementById("shortsPlayer");
+
+  async function init() {
+    try {
+      const res  = await fetch(`https://plus-api-teal.vercel.app/video/${videoId}/stream`);
+      const data = await res.json();
+      const formats = (data.formats || []).filter(f => f.vcodec !== "none" && f.url);
+
+      if (formats.length > 0) {
+        player.src = formats[formats.length - 1].url;
+        player.play();
+      }
+    } catch (e) {
+      console.error("Shorts再生エラー:", e);
+    }
+  }
+
+  init();
+</script>
+{% endblock %}
